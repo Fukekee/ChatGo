@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd44759737156a4a9bb8a68dc241ef3, type: 3}
+  m_Name: ConversationData
+  m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Data.ConversationData
+  lines:
+  - text: what'sup?bro
+    speaker: 0
+    replyOption1: 
+    replyOption2: 
+  - text: 
+    speaker: 1
+    replyOption1: yeah,here sonething is happening
+    replyOption2: Hi,bro
+  - text: Come on,just say  it
+    speaker: 0
+    replyOption1: 
+    replyOption2: 
+  - text: 
+    speaker: 1
+    replyOption1: well,i need to quit the job
+    replyOption2: 'you know what i mean '
+  - text: Fine,go for it. i am ok with that.
+    speaker: 0
+    replyOption1: well,i need to quit the job
+    replyOption2: 'you know what i mean '
