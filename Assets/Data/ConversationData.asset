@@ -12,24 +12,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44759737156a4a9bb8a68dc241ef3, type: 3}
   m_Name: ConversationData
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Data.ConversationData
-  lines:
-  - text: what'sup?bro
+  startNodeId: 1
+  nodes:
+  - nodeId: 1
+    text: "\u7F8E\u7F8E\uFF0C\u4F60\u6765\u5566"
     speaker: 0
-    replyOption1: 
-    replyOption2: 
-  - text: 
+    nextNodeId: 2
+    choices: []
+  - nodeId: 2
+    text: 
     speaker: 1
-    replyOption1: yeah,here sonething is happening
-    replyOption2: Hi,bro
-  - text: Come on,just say  it
+    nextNodeId: 
+    choices:
+    - choiceText: "\u662F\u554A\uFF0C\u59D0\u59D0"
+      targetNodeId: 3a
+    - choiceText: "\u6765\u770B\u770B\u4F60\u505A\u7684\u6E38\u620F\u600E\u4E48\u6837"
+      targetNodeId: 3b
+  - nodeId: 3a
+    text: "\u770B\u5230\u6CA1\uFF0C\u8FD9\u662F\u4E13\u95E8\u4E3A\u4F60\u505A\u7684"
     speaker: 0
-    replyOption1: 
-    replyOption2: 
-  - text: 
+    nextNodeId: 4
+    choices: []
+  - nodeId: 3b
+    text: "\u611F\u89C9\u6211\u7684\u6E38\u620F\u73A9\u8D77\u6765\u5982\u4F55\u554A"
+    speaker: 0
+    nextNodeId: 4
+    choices: []
+  - nodeId: 4
+    text: 
     speaker: 1
-    replyOption1: well,i need to quit the job
-    replyOption2: 'you know what i mean '
-  - text: Fine,go for it. i am ok with that.
+    nextNodeId: 
+    choices:
+    - choiceText: "\u611F\u89C9\u5F88\u4E00\u822C\u561B"
+      targetNodeId: 5a
+    - choiceText: "\u505A\u5F97\u592A\u597D\u4E86\uFF0C\u4F60\u662F\u6211\u7684\u795E"
+      targetNodeId: 5b
+  - nodeId: 5a
+    text: "\u6839\u636E\u6211\u7684\u7ECF\u9A8C\uFF0C\u4F60\u80AF\u5B9A\u5728\u8BF4\u53CD\u8BDD"
     speaker: 0
-    replyOption1: well,i need to quit the job
-    replyOption2: 'you know what i mean '
+    nextNodeId: 
+    choices: []
+  - nodeId: 4
+    text: "\u54C8\u54C8\u54C8\u54C8\u563F\u563F\u54C8\u54C8\u54C8\u54C8"
+    speaker: 1
+    nextNodeId: 5a
+    choices: []
