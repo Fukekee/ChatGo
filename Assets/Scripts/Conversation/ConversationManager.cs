@@ -1,3 +1,4 @@
+using System;
 using ChatGo.Bubble;
 using ChatGo.Data;
 using ChatGo.Opponent;
@@ -53,6 +54,8 @@ namespace ChatGo.Conversation
         [Tooltip("我方气泡相对 firstBubblePosition 的 X 偏移（右侧为正）")]
         [SerializeField] private float playerBubbleX = 4f;
 
+        public event Action ConversationCompleted;
+
         private Dictionary<string, DialogueNode> nodeMap;
         private string currentNodeId;
         private string pendingTargetNodeId;
@@ -67,6 +70,8 @@ namespace ChatGo.Conversation
 
         private void Start()
         {
+            ResolveSceneReferences();
+
             OpponentHealth.Instance?.ResetToMax();
             PlayerHealth.Instance?.ResetToMax();
 
@@ -110,6 +115,29 @@ namespace ChatGo.Conversation
         private void OnDestroy()
         {
             UnsubscribeCurrentBubble();
+        }
+
+        private void ResolveSceneReferences()
+        {
+            if (bubblePool == null)
+            {
+                bubblePool = FindFirstObjectByType<BubblePool>();
+            }
+
+            if (playerController == null)
+            {
+                playerController = FindFirstObjectByType<PlayerController>();
+            }
+
+            if (replyPanel == null)
+            {
+                replyPanel = FindFirstObjectByType<ReplyPanel>();
+            }
+
+            if (cameraFollow == null)
+            {
+                cameraFollow = FindFirstObjectByType<CameraFollow>();
+            }
         }
 
         private void BuildNodeMap()
@@ -307,6 +335,7 @@ namespace ChatGo.Conversation
 
             if (string.IsNullOrEmpty(nextId))
             {
+                ConversationCompleted?.Invoke();
                 return;
             }
 

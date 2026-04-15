@@ -36,6 +36,12 @@ ServerData/
 # ========== Crash Reports ==========
 sysinfo.txt
 
+# ========== Android Native Build Cache ==========
+.utmp/
+
+# ========== Unity Build Backup ==========
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+
 # ========== Others ==========
 *.apk
 *.aab

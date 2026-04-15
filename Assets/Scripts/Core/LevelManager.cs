@@ -1,0 +1,58 @@
+using System;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace ChatGo.Core
+{
+    public static class LevelManager
+    {
+        public static string CurrentLevelScene { get; private set; }
+
+        public const string MainMenuScene = "Main";
+        public const string GameBaseScene = "GameBase";
+
+        public static event Action SceneLoadStarted;
+        public static event Action SceneLoadCompleted;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            CurrentLevelScene = null;
+            SceneLoadStarted = null;
+            SceneLoadCompleted = null;
+        }
+
+        public static void LoadLevel(string sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneName))
+            {
+                Debug.LogError("LevelManager: sceneName 为空。");
+                return;
+            }
+
+            CurrentLevelScene = sceneName;
+            SceneLoadStarted?.Invoke();
+            SceneManager.LoadScene(GameBaseScene, LoadSceneMode.Single);
+            SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+        }
+
+        public static void ReturnToMainMenu()
+        {
+            CurrentLevelScene = null;
+            SceneLoadStarted?.Invoke();
+            SceneManager.LoadScene(MainMenuScene, LoadSceneMode.Single);
+        }
+
+        public static void ReloadCurrentLevel()
+        {
+            if (string.IsNullOrEmpty(CurrentLevelScene))
+            {
+                Debug.LogWarning("LevelManager: 没有当前关卡，返回主菜单。");
+                ReturnToMainMenu();
+                return;
+            }
+
+            LoadLevel(CurrentLevelScene);
+        }
+    }
+}

@@ -50,10 +50,29 @@ MonoBehaviour:
   - nodeId: 5a
     text: "\u6839\u636E\u6211\u7684\u7ECF\u9A8C\uFF0C\u4F60\u80AF\u5B9A\u5728\u8BF4\u53CD\u8BDD"
     speaker: 0
+    nextNodeId: 6
+    choices: []
+  - nodeId: 5b
+    text: "\u54C8\u54C8\u54C8\u54C8\u563F\u563F\u54C8\u54C8\u54C8\u54C8"
+    speaker: 0
+    nextNodeId: 6
+    choices: []
+  - nodeId: 6
+    text: 
+    speaker: 1
+    nextNodeId: 
+    choices:
+    - choiceText: "\u59D0\u59D0\u4F60\u8981\u53D1\u8D22\u5566"
+      targetNodeId: 7a
+    - choiceText: "\u6211\u8BA9\u946B\u5B87\u4E5F\u73A9\u4E00\u4E0B"
+      targetNodeId: 7b
+  - nodeId: 7a
+    text: "\u5230\u65F6\u5019\u8BA9\u4F60\u6BCF\u5929\u4ECE800\u5E73\u7C73\u7684\u5E8A\u4E0A\u9192\u6765"
+    speaker: 0
     nextNodeId: 
     choices: []
-  - nodeId: 4
-    text: "\u54C8\u54C8\u54C8\u54C8\u563F\u563F\u54C8\u54C8\u54C8\u54C8"
-    speaker: 1
-    nextNodeId: 5a
+  - nodeId: 7b
+    text: "\u8BB0\u5F97\u544A\u8BC9\u6211\u8C01\u7684\u5206\u6570\u9AD8"
+    speaker: 0
+    nextNodeId: 
     choices: []

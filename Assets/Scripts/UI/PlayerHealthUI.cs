@@ -23,6 +23,11 @@ namespace ChatGo.UI
 
         private void Start()
         {
+            if (playerHealth == null)
+            {
+                playerHealth = PlayerHealth.Instance;
+            }
+
             if (!subscribed)
             {
                 Subscribe();
