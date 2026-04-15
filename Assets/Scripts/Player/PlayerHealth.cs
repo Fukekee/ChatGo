@@ -12,6 +12,12 @@ namespace ChatGo.Player
         [SerializeField] private float damageInvincibilityDuration = 0.3f;
 
         public static PlayerHealth Instance { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
         public int CurrentHealth { get; private set; }
         public int MaxHealth => Mathf.Max(1, maxHealth);
         public bool IsDead => CurrentHealth <= 0;

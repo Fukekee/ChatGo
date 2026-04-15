@@ -1,5 +1,6 @@
 using ChatGo.Bubble;
 using ChatGo.Data;
+using ChatGo.Opponent;
 using ChatGo.Player;
 using ChatGo.UI;
 using System.Collections;
@@ -40,6 +41,10 @@ namespace ChatGo.Conversation
         [Tooltip("是否让相机跟随当前气泡（固定机位请取消勾选）")]
         [SerializeField] private bool followActiveBubbleWithCamera = true;
 
+        [Header("过渡")]
+        [Tooltip("触发 ReadReceipt 后，延迟多久再生成下一个平台并传送玩家（秒）。期间玩家无法移动。")]
+        [SerializeField] private float nextLineDelay = 0.7f;
+
         [Header("生成参数（仅 RuntimeBubblePool）")]
         [SerializeField] private Vector3 firstBubblePosition = Vector3.zero;
         [SerializeField] private float verticalSpacing = -3f;
@@ -56,9 +61,13 @@ namespace ChatGo.Conversation
         private readonly Queue<BubblePlatform> idleHandPlacedBubbles = new();
         private readonly List<Vector3> handPlacedSlotPositions = new();
         private Coroutine handPlacedSlideRoutine;
+        private Coroutine nextLineDelayRoutine;
 
         private void Start()
         {
+            OpponentHealth.Instance?.ResetToMax();
+            PlayerHealth.Instance?.ResetToMax();
+
             if (replyPanel != null)
             {
                 replyPanel.Hide();
@@ -199,6 +208,33 @@ namespace ChatGo.Conversation
                 return;
             }
 
+            ScheduleNextLine();
+        }
+
+        private void ScheduleNextLine()
+        {
+            if (nextLineDelayRoutine != null)
+            {
+                StopCoroutine(nextLineDelayRoutine);
+            }
+
+            nextLineDelayRoutine = StartCoroutine(DelayedSpawnNextLine());
+        }
+
+        private IEnumerator DelayedSpawnNextLine()
+        {
+            if (playerController != null)
+            {
+                playerController.CanMove = false;
+            }
+
+            float delay = Mathf.Max(0f, nextLineDelay);
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            nextLineDelayRoutine = null;
             SpawnNextLine();
         }
 
@@ -219,6 +255,7 @@ namespace ChatGo.Conversation
                 playerController.CanMove = health == null || !health.IsDead;
             }
         }
+
 
         private void SubscribeReadReceiptForCurrentBubble()
         {

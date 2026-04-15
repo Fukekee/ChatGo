@@ -9,6 +9,12 @@ namespace ChatGo.Opponent
 
         public static OpponentHealth Instance { get; private set; }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
+
         public int CurrentHealth { get; private set; }
         public int MaxHealth => Mathf.Max(1, maxHealth);
         public bool IsDead => CurrentHealth <= 0;

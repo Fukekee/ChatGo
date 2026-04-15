@@ -21,6 +21,15 @@ namespace ChatGo.UI
             Refresh();
         }
 
+        private void Start()
+        {
+            if (!subscribed)
+            {
+                Subscribe();
+                Refresh();
+            }
+        }
+
         private void OnDisable()
         {
             Unsubscribe();

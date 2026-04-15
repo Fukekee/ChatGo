@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 1614455101720528672}
   m_Layer: 0
   m_Name: OpponentBlock
-  m_TagString: Untagged
+  m_TagString: OpponentBlock
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -179,6 +179,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8eebb98f4a8e2dc4cac01ca92498cef3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Opponent.OpponentBlock
-  moveSpeed: 2
-  moveRange: 3
-  activeTime: 10
+  moveSpeed: 1.5
+  moveRange: 4
+  activeTime: 15
