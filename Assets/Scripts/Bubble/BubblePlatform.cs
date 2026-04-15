@@ -19,7 +19,7 @@ namespace ChatGo.Bubble
 
         public bool AvatarOnLeft => avatarOnLeft;
         public ReadReceiptTrigger ReadReceiptTrigger => readReceiptTrigger;
-        public DialogueLine CurrentLine { get; private set; }
+        public DialogueNode CurrentNode { get; private set; }
 
         public void ConfigureRuntime(
             bool avatarOnLeftValue,
@@ -37,12 +37,12 @@ namespace ChatGo.Bubble
             readReceiptTrigger = readReceiptTriggerValue;
         }
 
-        public void Init(DialogueLine lineData)
+        public void Init(DialogueNode nodeData)
         {
-            CurrentLine = lineData;
+            CurrentNode = nodeData;
             ResolveChatTextIfNeeded();
 
-            bool isPlayerLine = lineData != null && lineData.speaker == SpeakerSide.Player;
+            bool isPlayerLine = nodeData != null && nodeData.speaker == SpeakerSide.Player;
             if (typingIndicator != null)
             {
                 typingIndicator.SetActive(isPlayerLine);
@@ -56,7 +56,7 @@ namespace ChatGo.Bubble
                 }
                 else
                 {
-                    chatText.text = lineData?.text ?? string.Empty;
+                    chatText.text = nodeData?.text ?? string.Empty;
                 }
             }
 

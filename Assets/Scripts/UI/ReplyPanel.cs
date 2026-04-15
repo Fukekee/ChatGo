@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using ChatGo.Data;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,12 +10,12 @@ namespace ChatGo.UI
     public class ReplyPanel : MonoBehaviour
     {
         [SerializeField] private GameObject panelRoot;
-        [SerializeField] private Button option1Button;
-        [SerializeField] private Button option2Button;
-        [SerializeField] private TMP_Text option1Text;
-        [SerializeField] private TMP_Text option2Text;
+        [SerializeField] private Transform buttonContainer;
+        [Tooltip("可选：在 Inspector 中指定按钮预制体。为空时运行时自动创建。")]
+        [SerializeField] private Button buttonPrefab;
 
-        private Action<string> onSelectReply;
+        private readonly List<Button> spawnedButtons = new();
+        private Action<DialogueChoice> onSelectChoice;
 
         private void Awake()
         {
@@ -21,35 +23,27 @@ namespace ChatGo.UI
             {
                 panelRoot = gameObject;
             }
+
+            if (buttonContainer == null)
+            {
+                buttonContainer = panelRoot.transform;
+            }
         }
 
-        public void Show(string option1, string option2, Action<string> onSelected)
+        public void Show(DialogueChoice[] choices, Action<DialogueChoice> onSelected)
         {
-            onSelectReply = onSelected;
+            ClearButtons();
+            onSelectChoice = onSelected;
 
-            string text1 = string.IsNullOrWhiteSpace(option1) ? "好的" : option1;
-            string text2 = string.IsNullOrWhiteSpace(option2) ? "收到" : option2;
-
-            if (option1Text != null)
+            if (choices == null || choices.Length == 0)
             {
-                option1Text.text = text1;
+                return;
             }
 
-            if (option2Text != null)
+            foreach (DialogueChoice choice in choices)
             {
-                option2Text.text = text2;
-            }
-
-            if (option1Button != null)
-            {
-                option1Button.onClick.RemoveAllListeners();
-                option1Button.onClick.AddListener(() => SelectReply(text1));
-            }
-
-            if (option2Button != null)
-            {
-                option2Button.onClick.RemoveAllListeners();
-                option2Button.onClick.AddListener(() => SelectReply(text2));
+                Button btn = CreateChoiceButton(choice);
+                spawnedButtons.Add(btn);
             }
 
             panelRoot.SetActive(true);
@@ -57,13 +51,81 @@ namespace ChatGo.UI
 
         public void Hide()
         {
+            ClearButtons();
             panelRoot.SetActive(false);
         }
 
-        private void SelectReply(string replyText)
+        private Button CreateChoiceButton(DialogueChoice choice)
         {
-            onSelectReply?.Invoke(replyText);
-            Hide();
+            Button btn;
+            if (buttonPrefab != null)
+            {
+                btn = Instantiate(buttonPrefab, buttonContainer);
+            }
+            else
+            {
+                btn = CreateDefaultButton();
+            }
+
+            TMP_Text label = btn.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+            {
+                label.text = string.IsNullOrWhiteSpace(choice.choiceText) ? "..." : choice.choiceText;
+            }
+
+            btn.onClick.RemoveAllListeners();
+            DialogueChoice captured = choice;
+            btn.onClick.AddListener(() =>
+            {
+                onSelectChoice?.Invoke(captured);
+                Hide();
+            });
+
+            btn.gameObject.SetActive(true);
+            return btn;
+        }
+
+        private Button CreateDefaultButton()
+        {
+            GameObject btnObj = new("ChoiceButton");
+            btnObj.transform.SetParent(buttonContainer, false);
+
+            Image img = btnObj.AddComponent<Image>();
+            img.color = new Color(1f, 1f, 1f, 0.92f);
+
+            Button btn = btnObj.AddComponent<Button>();
+
+            RectTransform rect = btnObj.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(180f, 56f);
+
+            GameObject textNode = new("Label");
+            textNode.transform.SetParent(btnObj.transform, false);
+            RectTransform textRect = textNode.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            TMP_Text text = textNode.AddComponent<TextMeshProUGUI>();
+            text.text = "选项";
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = Color.black;
+            text.fontSize = 28f;
+
+            return btn;
+        }
+
+        private void ClearButtons()
+        {
+            foreach (Button btn in spawnedButtons)
+            {
+                if (btn != null)
+                {
+                    Destroy(btn.gameObject);
+                }
+            }
+
+            spawnedButtons.Clear();
         }
     }
 }

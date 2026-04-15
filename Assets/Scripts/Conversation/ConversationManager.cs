@@ -21,7 +21,7 @@ namespace ChatGo.Conversation
     {
         [Header("引用")]
         [SerializeField] private ConversationData conversationData;
-        [SerializeField] private DialogueLine[] fallbackLines;
+        [SerializeField] private DialogueNode[] fallbackNodes;
         [Tooltip("HandPlaced 模式下可为空")]
         [SerializeField] private BubblePool bubblePool;
         [SerializeField] private PlayerController playerController;
@@ -53,10 +53,12 @@ namespace ChatGo.Conversation
         [Tooltip("我方气泡相对 firstBubblePosition 的 X 偏移（右侧为正）")]
         [SerializeField] private float playerBubbleX = 4f;
 
-        private int currentLineIndex = -1;
+        private Dictionary<string, DialogueNode> nodeMap;
+        private string currentNodeId;
+        private string pendingTargetNodeId;
+        private int spawnCount;
         private BubblePlatform currentBubble;
         private BubblePlatform pendingReplyBubble;
-        private DialogueLine[] runtimeLines;
         private readonly List<BubblePlatform> activeHandPlacedBubbles = new();
         private readonly Queue<BubblePlatform> idleHandPlacedBubbles = new();
         private readonly List<Vector3> handPlacedSlotPositions = new();
@@ -82,7 +84,14 @@ namespace ChatGo.Conversation
                 }
             }
 
-            runtimeLines = ResolveRuntimeLines();
+            BuildNodeMap();
+
+            if (nodeMap.Count == 0)
+            {
+                Debug.LogError("ConversationManager: 没有对话节点。");
+                enabled = false;
+                return;
+            }
 
             if (platformMode == ConversationPlatformMode.HandPlacedInScene)
             {
@@ -95,7 +104,7 @@ namespace ChatGo.Conversation
                 PrepareHandPlacedPlatformsInactive();
             }
 
-            SpawnNextLine();
+            SpawnNode(ResolveStartNodeId());
         }
 
         private void OnDestroy()
@@ -103,19 +112,109 @@ namespace ChatGo.Conversation
             UnsubscribeCurrentBubble();
         }
 
-        private void SpawnNextLine()
+        private void BuildNodeMap()
         {
-            DialogueLine nextLine = GetNextLine();
-            if (nextLine == null)
+            nodeMap = new Dictionary<string, DialogueNode>();
+            DialogueNode[] nodes = ResolveNodes();
+            foreach (DialogueNode node in nodes)
+            {
+                if (string.IsNullOrEmpty(node.nodeId))
+                {
+                    continue;
+                }
+
+                if (nodeMap.ContainsKey(node.nodeId))
+                {
+                    Debug.LogWarning($"ConversationManager: 重复的节点 ID \"{node.nodeId}\"，后者会覆盖前者。");
+                }
+
+                nodeMap[node.nodeId] = node;
+            }
+        }
+
+        private DialogueNode[] ResolveNodes()
+        {
+            if (conversationData != null && conversationData.nodes != null && conversationData.nodes.Length > 0)
+            {
+                return conversationData.nodes;
+            }
+
+            if (fallbackNodes != null && fallbackNodes.Length > 0)
+            {
+                return fallbackNodes;
+            }
+
+            return new[]
+            {
+                new DialogueNode
+                {
+                    nodeId = "1",
+                    speaker = SpeakerSide.Opponent,
+                    text = "现在项目很忙啊",
+                    nextNodeId = "2"
+                },
+                new DialogueNode
+                {
+                    nodeId = "2",
+                    speaker = SpeakerSide.Player,
+                    choices = new[]
+                    {
+                        new DialogueChoice { choiceText = "但是我的工作很早就完成了", targetNodeId = "3a" },
+                        new DialogueChoice { choiceText = "我可以远程处理，保证不影响进度", targetNodeId = "3b" }
+                    }
+                },
+                new DialogueNode
+                {
+                    nodeId = "3a",
+                    speaker = SpeakerSide.Opponent,
+                    text = "那你把交接方案发我"
+                },
+                new DialogueNode
+                {
+                    nodeId = "3b",
+                    speaker = SpeakerSide.Opponent,
+                    text = "行，那你保持在线随时沟通"
+                }
+            };
+        }
+
+        private string ResolveStartNodeId()
+        {
+            if (conversationData != null && !string.IsNullOrEmpty(conversationData.startNodeId))
+            {
+                return conversationData.startNodeId;
+            }
+
+            DialogueNode[] nodes = ResolveNodes();
+            return nodes.Length > 0 ? nodes[0].nodeId : null;
+        }
+
+        private DialogueNode GetNode(string nodeId)
+        {
+            if (string.IsNullOrEmpty(nodeId))
+            {
+                return null;
+            }
+
+            return nodeMap.TryGetValue(nodeId, out DialogueNode node) ? node : null;
+        }
+
+        private void SpawnNode(string nodeId)
+        {
+            DialogueNode node = GetNode(nodeId);
+            if (node == null)
             {
                 return;
             }
+
+            currentNodeId = nodeId;
+            pendingTargetNodeId = null;
 
             BubblePlatform nextBubble = null;
 
             if (platformMode == ConversationPlatformMode.HandPlacedInScene)
             {
-                nextBubble = SpawnHandPlacedLine(nextLine);
+                nextBubble = SpawnHandPlacedLine(node);
                 if (nextBubble == null)
                 {
                     return;
@@ -128,22 +227,24 @@ namespace ChatGo.Conversation
                     return;
                 }
 
-                float xOffset = nextLine.speaker == SpeakerSide.Opponent ? opponentBubbleX : playerBubbleX;
+                float xOffset = node.speaker == SpeakerSide.Opponent ? opponentBubbleX : playerBubbleX;
                 Vector3 spawnPosition = new Vector3(
                     firstBubblePosition.x + xOffset,
-                    firstBubblePosition.y + verticalSpacing * currentLineIndex,
+                    firstBubblePosition.y + verticalSpacing * spawnCount,
                     firstBubblePosition.z);
-                nextBubble = bubblePool.SpawnLine(nextLine, spawnPosition);
+                nextBubble = bubblePool.SpawnLine(node, spawnPosition);
                 if (nextBubble == null)
                 {
                     return;
                 }
             }
 
+            spawnCount++;
+
             UnsubscribeCurrentBubble();
             currentBubble = nextBubble;
-            // 玩家回复行：须先选 ReplyPanel，再订阅读回执；否则传送后与触发器重迭会立刻推进对话。
-            if (nextLine.speaker != SpeakerSide.Player)
+
+            if (node.speaker != SpeakerSide.Player)
             {
                 SubscribeReadReceiptForCurrentBubble();
             }
@@ -156,7 +257,7 @@ namespace ChatGo.Conversation
                 cameraFollow.SetFollowTarget(currentBubble.transform);
             }
 
-            if (nextLine.speaker == SpeakerSide.Player)
+            if (node.speaker == SpeakerSide.Player)
             {
                 pendingReplyBubble = currentBubble;
                 if (playerController != null)
@@ -166,7 +267,7 @@ namespace ChatGo.Conversation
 
                 if (replyPanel != null)
                 {
-                    replyPanel.Show(nextLine.replyOption1, nextLine.replyOption2, OnReplySelected);
+                    replyPanel.Show(node.choices, OnChoiceSelected);
                 }
             }
             else
@@ -185,22 +286,6 @@ namespace ChatGo.Conversation
             }
         }
 
-        private DialogueLine GetNextLine()
-        {
-            if (runtimeLines == null || runtimeLines.Length == 0)
-            {
-                return null;
-            }
-
-            currentLineIndex += 1;
-            if (currentLineIndex < 0 || currentLineIndex >= runtimeLines.Length)
-            {
-                return null;
-            }
-
-            return runtimeLines[currentLineIndex];
-        }
-
         private void OnBubbleReadTriggered(ReadReceiptTrigger trigger)
         {
             if (trigger == null || trigger.OwnerPlatform != currentBubble)
@@ -208,20 +293,37 @@ namespace ChatGo.Conversation
                 return;
             }
 
-            ScheduleNextLine();
+            string nextId;
+            if (!string.IsNullOrEmpty(pendingTargetNodeId))
+            {
+                nextId = pendingTargetNodeId;
+                pendingTargetNodeId = null;
+            }
+            else
+            {
+                DialogueNode current = GetNode(currentNodeId);
+                nextId = current?.nextNodeId;
+            }
+
+            if (string.IsNullOrEmpty(nextId))
+            {
+                return;
+            }
+
+            ScheduleNextNode(nextId);
         }
 
-        private void ScheduleNextLine()
+        private void ScheduleNextNode(string nextNodeId)
         {
             if (nextLineDelayRoutine != null)
             {
                 StopCoroutine(nextLineDelayRoutine);
             }
 
-            nextLineDelayRoutine = StartCoroutine(DelayedSpawnNextLine());
+            nextLineDelayRoutine = StartCoroutine(DelayedSpawnNode(nextNodeId));
         }
 
-        private IEnumerator DelayedSpawnNextLine()
+        private IEnumerator DelayedSpawnNode(string nextNodeId)
         {
             if (playerController != null)
             {
@@ -235,17 +337,19 @@ namespace ChatGo.Conversation
             }
 
             nextLineDelayRoutine = null;
-            SpawnNextLine();
+            SpawnNode(nextNodeId);
         }
 
-        private void OnReplySelected(string selectedReply)
+        private void OnChoiceSelected(DialogueChoice choice)
         {
             BubblePlatform bubble = pendingReplyBubble;
             pendingReplyBubble = null;
 
+            pendingTargetNodeId = choice.targetNodeId;
+
             if (bubble != null)
             {
-                bubble.SetReplyText(selectedReply);
+                bubble.SetReplyText(choice.choiceText);
                 SubscribeReadReceiptForBubble(bubble);
             }
 
@@ -255,7 +359,6 @@ namespace ChatGo.Conversation
                 playerController.CanMove = health == null || !health.IsDead;
             }
         }
-
 
         private void SubscribeReadReceiptForCurrentBubble()
         {
@@ -281,42 +384,9 @@ namespace ChatGo.Conversation
             }
         }
 
-        private DialogueLine[] ResolveRuntimeLines()
-        {
-            if (conversationData != null && conversationData.lines != null && conversationData.lines.Length > 0)
-            {
-                return conversationData.lines;
-            }
-
-            if (fallbackLines != null && fallbackLines.Length > 0)
-            {
-                return fallbackLines;
-            }
-
-            return new[]
-            {
-                new DialogueLine
-                {
-                    speaker = SpeakerSide.Opponent,
-                    text = "现在项目很忙啊"
-                },
-                new DialogueLine
-                {
-                    speaker = SpeakerSide.Player,
-                    replyOption1 = "但是我的工作很早就完成了",
-                    replyOption2 = "我可以远程处理，保证不影响进度"
-                },
-                new DialogueLine
-                {
-                    speaker = SpeakerSide.Opponent,
-                    text = "你先把交接方案发我"
-                }
-            };
-        }
-
         private bool ValidateHandPlacedSetup()
         {
-            if (runtimeLines == null || runtimeLines.Length == 0)
+            if (nodeMap == null || nodeMap.Count == 0)
             {
                 Debug.LogError("ConversationManager: 没有对话数据。");
                 return false;
@@ -375,9 +445,9 @@ namespace ChatGo.Conversation
             }
         }
 
-        private BubblePlatform SpawnHandPlacedLine(DialogueLine lineData)
+        private BubblePlatform SpawnHandPlacedLine(DialogueNode nodeData)
         {
-            if (lineData == null || handPlacedSlotPositions.Count == 0)
+            if (nodeData == null || handPlacedSlotPositions.Count == 0)
             {
                 return null;
             }
@@ -413,10 +483,9 @@ namespace ChatGo.Conversation
             }
 
             bubbleToUse.gameObject.SetActive(true);
-            bubbleToUse.Init(lineData);
+            bubbleToUse.Init(nodeData);
             activeHandPlacedBubbles.Add(bubbleToUse);
 
-            // 方案 A：先把最新平台放到最终槽位，再传送玩家；其余平台随后做上移动画。
             int targetSlotForLatest = Mathf.Clamp(activeHandPlacedBubbles.Count - 1, 0, handPlacedSlotPositions.Count - 1);
             bubbleToUse.transform.position = handPlacedSlotPositions[targetSlotForLatest];
 
@@ -445,7 +514,6 @@ namespace ChatGo.Conversation
             {
                 BubblePlatform bubble = activeHandPlacedBubbles[i];
                 from[i] = bubble.transform.position;
-                // 前 3 条按上->中->下依次填充；满屏后每次上移一格，最新落在最下槽位。
                 int targetSlot = Mathf.Clamp(i, 0, slotCount - 1);
                 to[i] = handPlacedSlotPositions[targetSlot];
             }

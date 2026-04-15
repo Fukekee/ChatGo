@@ -135,18 +135,17 @@ namespace ChatGo.Conversation
             Image panelImage = panelRoot.AddComponent<Image>();
             panelImage.color = new Color(0.18f, 0.18f, 0.18f, 0.7f);
 
+            HorizontalLayoutGroup layout = panelRoot.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 20f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.padding = new RectOffset(16, 16, 8, 8);
+
             ReplyPanel replyPanel = panelRoot.AddComponent<ReplyPanel>();
 
-            Button option1 = CreateButton(panelRoot.transform, "Option1", new Vector2(0.25f, 0.5f));
-            Button option2 = CreateButton(panelRoot.transform, "Option2", new Vector2(0.75f, 0.5f));
-            TMP_Text option1Text = option1.GetComponentInChildren<TMP_Text>();
-            TMP_Text option2Text = option2.GetComponentInChildren<TMP_Text>();
-
             SerializedFieldSetter.SetField(replyPanel, "panelRoot", panelRoot);
-            SerializedFieldSetter.SetField(replyPanel, "option1Button", option1);
-            SerializedFieldSetter.SetField(replyPanel, "option2Button", option2);
-            SerializedFieldSetter.SetField(replyPanel, "option1Text", option1Text);
-            SerializedFieldSetter.SetField(replyPanel, "option2Text", option2Text);
+            SerializedFieldSetter.SetField(replyPanel, "buttonContainer", panelRoot.transform);
 
             CreateMobileButtons(canvas.transform, player);
 

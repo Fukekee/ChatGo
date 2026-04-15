@@ -37,21 +37,21 @@ namespace ChatGo.Bubble
             PrewarmPool(playerPool, runtimePlayerTemplate);
         }
 
-        public BubblePlatform SpawnLine(DialogueLine lineData, Vector3 worldPosition)
+        public BubblePlatform SpawnLine(DialogueNode nodeData, Vector3 worldPosition)
         {
-            if (lineData == null)
+            if (nodeData == null)
             {
                 return null;
             }
 
-            Queue<BubblePlatform> pool = lineData.speaker == SpeakerSide.Player ? playerPool : opponentPool;
-            BubblePlatform template = lineData.speaker == SpeakerSide.Player ? runtimePlayerTemplate : runtimeOpponentTemplate;
+            Queue<BubblePlatform> pool = nodeData.speaker == SpeakerSide.Player ? playerPool : opponentPool;
+            BubblePlatform template = nodeData.speaker == SpeakerSide.Player ? runtimePlayerTemplate : runtimeOpponentTemplate;
             BubblePlatform instance = pool.Count > 0 ? pool.Dequeue() : CreateFromTemplate(template);
 
             instance.transform.SetParent(spawnParent, true);
             instance.transform.position = worldPosition;
             instance.gameObject.SetActive(true);
-            instance.Init(lineData);
+            instance.Init(nodeData);
 
             activeBubbles.AddLast(instance);
             if (activeBubbles.Count > maxVisibleBubbles)
