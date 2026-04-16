@@ -7,6 +7,7 @@ namespace ChatGo.Core
     public static class LevelManager
     {
         public static string CurrentLevelScene { get; private set; }
+        public static string CurrentLevelId { get; private set; }
 
         public const string MainMenuScene = "Main";
         public const string GameBaseScene = "GameBase";
@@ -18,11 +19,12 @@ namespace ChatGo.Core
         private static void ResetStatics()
         {
             CurrentLevelScene = null;
+            CurrentLevelId = null;
             SceneLoadStarted = null;
             SceneLoadCompleted = null;
         }
 
-        public static void LoadLevel(string sceneName)
+        public static void LoadLevel(string sceneName, string levelId = null)
         {
             if (string.IsNullOrEmpty(sceneName))
             {
@@ -30,7 +32,10 @@ namespace ChatGo.Core
                 return;
             }
 
+            SetOrientation(ScreenOrientation.LandscapeLeft);
+
             CurrentLevelScene = sceneName;
+            CurrentLevelId = levelId;
             SceneLoadStarted?.Invoke();
             SceneManager.LoadScene(GameBaseScene, LoadSceneMode.Single);
             SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
@@ -38,7 +43,10 @@ namespace ChatGo.Core
 
         public static void ReturnToMainMenu()
         {
+            SetOrientation(ScreenOrientation.Portrait);
+
             CurrentLevelScene = null;
+            CurrentLevelId = null;
             SceneLoadStarted?.Invoke();
             SceneManager.LoadScene(MainMenuScene, LoadSceneMode.Single);
         }
@@ -52,7 +60,16 @@ namespace ChatGo.Core
                 return;
             }
 
-            LoadLevel(CurrentLevelScene);
+            LoadLevel(CurrentLevelScene, CurrentLevelId);
+        }
+
+        private static void SetOrientation(ScreenOrientation orientation)
+        {
+#if UNITY_EDITOR
+            Debug.Log($"LevelManager: 屏幕方向 -> {orientation}");
+#else
+            Screen.orientation = orientation;
+#endif
         }
     }
 }

@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: "\u9EC4\u74DC"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6d4ae735d2241a54c86a8fb0afe502b7, type: 2}
   m_sharedMaterial: {fileID: -7569551249999368018, guid: 6d4ae735d2241a54c86a8fb0afe502b7, type: 2}
@@ -316,8 +316,8 @@ MonoBehaviour:
   m_Spacing: 0
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0

@@ -30,13 +30,15 @@ namespace ChatGo.Player
         [SerializeField] private string moveActionName = "Move";
         [SerializeField] private string jumpActionName = "Jump";
 
+        private const float JumpCooldown = 0.2f;
+
         private Rigidbody2D rb;
         private InputAction moveAction;
         private InputAction jumpAction;
         private float moveInputX;
         private float uiMoveInputX;
         private float baseGravityScale;
-        private bool hasJumped;
+        private float jumpCooldownTimer;
 
         public bool CanMove { get; set; } = true;
         public bool IsGrounded { get; private set; }
@@ -82,6 +84,11 @@ namespace ChatGo.Player
 
         private void Update()
         {
+            if (jumpCooldownTimer > 0f)
+            {
+                jumpCooldownTimer -= Time.deltaTime;
+            }
+
             UpdateGroundedState();
             HandleKeyboardJumpFallback();
 
@@ -114,17 +121,16 @@ namespace ChatGo.Player
 
         public void ForceJump()
         {
-            if (!CanMove || !IsGrounded || hasJumped)
+            if (!CanMove || jumpCooldownTimer > 0f)
             {
                 return;
             }
 
-            hasJumped = true;
+            jumpCooldownTimer = JumpCooldown;
 
             Vector2 velocity = rb.linearVelocity;
-            velocity.y = 0f;
+            velocity.y = jumpForce;
             rb.linearVelocity = velocity;
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
 
         public void SetMoveInputFromUI(float horizontal)
@@ -217,11 +223,6 @@ namespace ChatGo.Player
                 Mathf.Max(0.01f, groundCheckBoxSize.x),
                 Mathf.Max(0.01f, groundCheckBoxSize.y));
             IsGrounded = Physics2D.OverlapBox(groundCheck.position, checkSize, 0f, groundLayerMask);
-
-            if (IsGrounded)
-            {
-                hasJumped = false;
-            }
         }
 
 #if UNITY_EDITOR

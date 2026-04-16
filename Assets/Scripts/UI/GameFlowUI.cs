@@ -142,6 +142,12 @@ namespace ChatGo.UI
 
             gameEnded = true;
 
+            if (!string.IsNullOrEmpty(grade) && !string.IsNullOrEmpty(LevelManager.CurrentLevelId))
+            {
+                LevelProgress.SaveResult(LevelManager.CurrentLevelId, grade);
+                TryUnlockNextLevel();
+            }
+
             if (resultPanel != null)
             {
                 resultPanel.SetActive(true);
@@ -176,6 +182,27 @@ namespace ChatGo.UI
                 else
                 {
                     resultDescriptionText.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private void TryUnlockNextLevel()
+        {
+            var allContacts = Resources.FindObjectsOfTypeAll<ContactData>();
+            foreach (var contact in allContacts)
+            {
+                if (contact.levels == null) continue;
+
+                for (int i = 0; i < contact.levels.Length; i++)
+                {
+                    if (contact.levels[i].levelId != LevelManager.CurrentLevelId) continue;
+
+                    int nextIndex = i + 1;
+                    if (nextIndex < contact.levels.Length && LevelProgress.IsUnlocked(contact, nextIndex))
+                    {
+                        LevelProgress.MarkUnlocked(contact.levels[nextIndex].levelId);
+                    }
+                    return;
                 }
             }
         }
