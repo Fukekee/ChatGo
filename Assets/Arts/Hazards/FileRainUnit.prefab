@@ -47,12 +47,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Hazards.FileRainSpawner
   dropPrefabs:
   - {fileID: 8601296640733618745, guid: efe38dcde1eb66048a74be5ee403d505, type: 3}
-  spawnCount: 8
+  spawnCount: 6
   spawnInterval: 1.5
   minX: -1
   maxX: 3.3
   spawnY: 0
-  despawnY: -2.65
+  despawnY: -3.5
   prewarmCount: 12
   poolRoot: {fileID: 0}
 --- !u!1 &5604086190511296131
@@ -82,7 +82,7 @@ Transform:
   m_GameObject: {fileID: 5604086190511296131}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -2.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

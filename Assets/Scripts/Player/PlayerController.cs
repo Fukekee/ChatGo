@@ -36,6 +36,7 @@ namespace ChatGo.Player
         private float moveInputX;
         private float uiMoveInputX;
         private float baseGravityScale;
+        private bool hasJumped;
 
         public bool CanMove { get; set; } = true;
         public bool IsGrounded { get; private set; }
@@ -113,10 +114,12 @@ namespace ChatGo.Player
 
         public void ForceJump()
         {
-            if (!CanMove || !IsGrounded)
+            if (!CanMove || !IsGrounded || hasJumped)
             {
                 return;
             }
+
+            hasJumped = true;
 
             Vector2 velocity = rb.linearVelocity;
             velocity.y = 0f;
@@ -214,6 +217,11 @@ namespace ChatGo.Player
                 Mathf.Max(0.01f, groundCheckBoxSize.x),
                 Mathf.Max(0.01f, groundCheckBoxSize.y));
             IsGrounded = Physics2D.OverlapBox(groundCheck.position, checkSize, 0f, groundLayerMask);
+
+            if (IsGrounded)
+            {
+                hasJumped = false;
+            }
         }
 
 #if UNITY_EDITOR

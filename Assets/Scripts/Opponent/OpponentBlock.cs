@@ -5,6 +5,7 @@ namespace ChatGo.Opponent
     /// <summary>
     /// 水平来回移动的 Opponent 方块。
     /// 被炮台子弹命中时通过 Hit() 扣全局 Opponent 血量。
+    /// 玩家从下方跳跃撞击同样可造成伤害。
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class OpponentBlock : MonoBehaviour
@@ -18,9 +19,15 @@ namespace ChatGo.Opponent
         [Tooltip("大于 0 时方块会在该秒数后销毁；0 或负数表示永久存在")]
         [SerializeField] private float activeTime = 10f;
 
+        [Header("玩家跳跃攻击")]
+        [SerializeField] private int playerHitDamage = 10;
+        [Tooltip("同一次跳跃中不会重复计算伤害的冷却时间（秒）")]
+        [SerializeField] private float hitCooldown = 0.5f;
+
         private Vector3 originPosition;
         private float direction = 1f;
         private float activeTimer;
+        private float lastPlayerHitTime = float.NegativeInfinity;
 
         private void Awake()
         {
@@ -56,10 +63,38 @@ namespace ChatGo.Opponent
             TickActiveTimer();
         }
 
-        /// <summary>被炮台子弹调用，扣全局 Opponent 血量。</summary>
+        /// <summary>被炮台子弹或玩家跳跃调用，扣全局 Opponent 血量。</summary>
         public void Hit(int damage)
         {
             OpponentHealth.Instance?.TakeDamage(damage);
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (!other.CompareTag("Player"))
+            {
+                return;
+            }
+
+            if (Time.time - lastPlayerHitTime < hitCooldown)
+            {
+                return;
+            }
+
+            Rigidbody2D playerRb = other.attachedRigidbody;
+            if (playerRb == null)
+            {
+                return;
+            }
+
+            bool isBelow = other.transform.position.y < transform.position.y;
+            bool isMovingUp = playerRb.linearVelocity.y > 0.1f;
+
+            if (isBelow && isMovingUp)
+            {
+                lastPlayerHitTime = Time.time;
+                Hit(playerHitDamage);
+            }
         }
 
         private void Move()
