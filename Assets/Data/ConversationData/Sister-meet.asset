@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44759737156a4a9bb8a68dc241ef3, type: 3}
-  m_Name: ConversationData
+  m_Name: Sister-meet
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Data.ConversationData
   startNodeId: 1
   nodes:
@@ -64,7 +64,7 @@ MonoBehaviour:
     choices:
     - choiceText: "\u59D0\u59D0\u4F60\u8981\u53D1\u8D22\u5566"
       targetNodeId: 7a
-    - choiceText: "\u6211\u8BA9\u946B\u5B87\u4E5F\u73A9\u4E00\u4E0B"
+    - choiceText: "\u5F85\u4F1A\u8BA9\u946B\u5B87\u4E5F\u73A9\u4E00\u5C40"
       targetNodeId: 7b
   - nodeId: 7a
     text: "\u5230\u65F6\u5019\u8BA9\u4F60\u6BCF\u5929\u4ECE800\u5E73\u7C73\u7684\u5E8A\u4E0A\u9192\u6765"

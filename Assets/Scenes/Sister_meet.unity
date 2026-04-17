@@ -2413,6 +2413,10 @@ PrefabInstance:
       propertyPath: spawnInterval
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2393838878218897761, guid: 404a85dc12065f54896b3b395263b6a6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -2.47
+      objectReference: {fileID: 0}
     - target: {fileID: 3176735970968336495, guid: 404a85dc12065f54896b3b395263b6a6, type: 3}
       propertyPath: m_Name
       value: FileRainUnit
@@ -2423,7 +2427,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8253532086156266733, guid: 404a85dc12065f54896b3b395263b6a6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.0155501
+      value: 3.89
       objectReference: {fileID: 0}
     - target: {fileID: 8253532086156266733, guid: 404a85dc12065f54896b3b395263b6a6, type: 3}
       propertyPath: m_LocalPosition.z

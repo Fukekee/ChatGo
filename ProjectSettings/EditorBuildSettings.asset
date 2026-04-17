@@ -12,7 +12,7 @@ EditorBuildSettings:
     path: Assets/Scenes/GameBase.unity
     guid: 6e0f97b20eca8d7478f07e115a6dbb51
   - enabled: 1
-    path: Assets/Scenes/QingJia.unity
+    path: Assets/Scenes/Sister_meet.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
