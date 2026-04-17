@@ -189,20 +189,21 @@ namespace ChatGo.UI
         private void TryUnlockNextLevel()
         {
             var allContacts = Resources.FindObjectsOfTypeAll<ContactData>();
+
             foreach (var contact in allContacts)
             {
-                if (contact.levels == null) continue;
+                if (contact == null || contact.levels == null) continue;
 
-                for (int i = 0; i < contact.levels.Length; i++)
+                foreach (var level in contact.levels)
                 {
-                    if (contact.levels[i].levelId != LevelManager.CurrentLevelId) continue;
+                    if (level == null || string.IsNullOrEmpty(level.levelId)) continue;
+                    if (LevelProgress.GetUnlockTimestamp(level.levelId) > 0) continue;
 
-                    int nextIndex = i + 1;
-                    if (nextIndex < contact.levels.Length && LevelProgress.IsUnlocked(contact, nextIndex))
+                    if (LevelProgress.IsUnlocked(level))
                     {
-                        LevelProgress.MarkUnlocked(contact.levels[nextIndex].levelId);
+                        LevelProgress.MarkUnlocked(level.levelId);
+                        Debug.Log($"GameFlowUI: 关卡解锁 -> {contact.displayName}·{level.displayName}");
                     }
-                    return;
                 }
             }
         }

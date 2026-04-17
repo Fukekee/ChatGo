@@ -159,9 +159,8 @@ namespace ChatGo.UI
                     case "LevelStatus":
                         if (!unlocked)
                         {
-                            text.text = string.IsNullOrEmpty(level.requiredGrade)
-                                ? "🔒 未解锁"
-                                : $"🔒 需要上一关达到 {level.requiredGrade}";
+                            string reason = LevelProgress.GetLockReason(level);
+                            text.text = string.IsNullOrEmpty(reason) ? "🔒 未解锁" : reason;
                             text.color = new Color(0.7f, 0.7f, 0.7f);
                         }
                         else if (completed)

@@ -10,6 +10,7 @@ namespace ChatGo.Data
         public bool completed;
         public string bestGrade;
         public long unlockTimestamp;
+        public long completedTimestamp;
     }
 
     [Serializable]
@@ -93,6 +94,11 @@ namespace ChatGo.Data
             return GetCache().TryGetValue(levelId, out var record) ? record.unlockTimestamp : 0;
         }
 
+        public static long GetCompletedTimestamp(string levelId)
+        {
+            return GetCache().TryGetValue(levelId, out var record) ? record.completedTimestamp : 0;
+        }
+
         public static void SaveResult(string levelId, string grade)
         {
             var data = GetCache();
@@ -102,6 +108,7 @@ namespace ChatGo.Data
                 data[levelId] = record;
             }
 
+            bool firstCompletion = !record.completed;
             record.completed = true;
 
             if (string.IsNullOrEmpty(record.bestGrade) || CompareGrade(grade, record.bestGrade) > 0)
@@ -109,9 +116,16 @@ namespace ChatGo.Data
                 record.bestGrade = grade;
             }
 
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
             if (record.unlockTimestamp == 0)
             {
-                record.unlockTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                record.unlockTimestamp = now;
+            }
+
+            if (firstCompletion && record.completedTimestamp == 0)
+            {
+                record.completedTimestamp = now;
             }
 
             Save();
@@ -134,21 +148,196 @@ namespace ChatGo.Data
             }
         }
 
+        /// <summary>
+        /// New API: evaluate unlock condition based on the level's own configuration.
+        /// </summary>
+        public static bool IsUnlocked(LevelData level)
+        {
+            if (level == null) return false;
+            if (level.unlockedFromStart) return true;
+
+            if (level.unlockConditions != null && level.unlockConditions.Length > 0)
+            {
+                foreach (var cond in level.unlockConditions)
+                {
+                    if (!EvaluateCondition(cond)) return false;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool EvaluateCondition(UnlockCondition cond)
+        {
+            if (cond == null || string.IsNullOrEmpty(cond.requiredLevelId)) return true;
+
+            if (!IsCompleted(cond.requiredLevelId)) return false;
+
+            if (!string.IsNullOrEmpty(cond.minimumGrade))
+            {
+                string best = GetBestGrade(cond.requiredLevelId);
+                if (string.IsNullOrEmpty(best)) return false;
+                if (CompareGrade(best, cond.minimumGrade) < 0) return false;
+            }
+
+            return CheckTimeGate(cond);
+        }
+
+        private static bool CheckTimeGate(UnlockCondition cond)
+        {
+            switch (cond.trigger)
+            {
+                case UnlockTrigger.Immediate:
+                    return true;
+
+                case UnlockTrigger.NextCalendarDay:
+                {
+                    long ts = GetCompletedTimestamp(cond.requiredLevelId);
+                    if (ts == 0) return false;
+                    var completedDate = DateTimeOffset.FromUnixTimeSeconds(ts).LocalDateTime.Date;
+                    return DateTime.Now.Date > completedDate;
+                }
+
+                case UnlockTrigger.DelayHours:
+                {
+                    long ts = GetCompletedTimestamp(cond.requiredLevelId);
+                    if (ts == 0) return false;
+                    var completedAt = DateTimeOffset.FromUnixTimeSeconds(ts).LocalDateTime;
+                    return (DateTime.Now - completedAt).TotalHours >= cond.delayHours;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Backward compatible overload — uses contact + index, falls back to legacy
+        /// "previous level + requiredGrade" rule if the level has no new conditions.
+        /// </summary>
         public static bool IsUnlocked(ContactData contact, int levelIndex)
         {
             if (contact == null || contact.levels == null) return false;
             if (levelIndex < 0 || levelIndex >= contact.levels.Length) return false;
-            if (levelIndex == 0) return true;
 
+            var level = contact.levels[levelIndex];
+
+            if (level.unlockedFromStart) return true;
+
+            if (level.unlockConditions != null && level.unlockConditions.Length > 0)
+            {
+                return IsUnlocked(level);
+            }
+
+            // Legacy fallback: first level free, otherwise previous + requiredGrade.
+            if (levelIndex == 0) return true;
             var prevLevel = contact.levels[levelIndex - 1];
-            var currentLevel = contact.levels[levelIndex];
 
             if (!IsCompleted(prevLevel.levelId)) return false;
-
-            if (string.IsNullOrEmpty(currentLevel.requiredGrade)) return true;
+            if (string.IsNullOrEmpty(level.requiredGrade)) return true;
 
             string bestGrade = GetBestGrade(prevLevel.levelId);
-            return !string.IsNullOrEmpty(bestGrade) && CompareGrade(bestGrade, currentLevel.requiredGrade) >= 0;
+            return !string.IsNullOrEmpty(bestGrade) && CompareGrade(bestGrade, level.requiredGrade) >= 0;
+        }
+
+        /// <summary>
+        /// Returns a user-friendly description of why a level is locked, or null if unlocked.
+        /// </summary>
+        public static string GetLockReason(LevelData level)
+        {
+            if (level == null) return null;
+            if (level.unlockedFromStart) return null;
+
+            if (level.unlockConditions != null && level.unlockConditions.Length > 0)
+            {
+                foreach (var cond in level.unlockConditions)
+                {
+                    string reason = GetConditionLockReason(cond);
+                    if (reason != null) return reason;
+                }
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(level.requiredGrade))
+            {
+                return "🔒 未解锁";
+            }
+            return $"🔒 需要上一关达到 {level.requiredGrade}";
+        }
+
+        private static string GetConditionLockReason(UnlockCondition cond)
+        {
+            if (cond == null || string.IsNullOrEmpty(cond.requiredLevelId)) return null;
+
+            string prereqName = ResolveLevelDisplayName(cond.requiredLevelId);
+
+            if (!IsCompleted(cond.requiredLevelId))
+            {
+                return $"🔒 先完成「{prereqName}」";
+            }
+
+            if (!string.IsNullOrEmpty(cond.minimumGrade))
+            {
+                string best = GetBestGrade(cond.requiredLevelId);
+                if (string.IsNullOrEmpty(best) || CompareGrade(best, cond.minimumGrade) < 0)
+                {
+                    return $"🔒 「{prereqName}」需达到 {cond.minimumGrade}";
+                }
+            }
+
+            switch (cond.trigger)
+            {
+                case UnlockTrigger.NextCalendarDay:
+                {
+                    long ts = GetCompletedTimestamp(cond.requiredLevelId);
+                    if (ts > 0)
+                    {
+                        var completedDate = DateTimeOffset.FromUnixTimeSeconds(ts).LocalDateTime.Date;
+                        if (DateTime.Now.Date <= completedDate)
+                        {
+                            return "🕒 明天再来";
+                        }
+                    }
+                    break;
+                }
+
+                case UnlockTrigger.DelayHours:
+                {
+                    long ts = GetCompletedTimestamp(cond.requiredLevelId);
+                    if (ts > 0)
+                    {
+                        var completedAt = DateTimeOffset.FromUnixTimeSeconds(ts).LocalDateTime;
+                        double remaining = cond.delayHours - (DateTime.Now - completedAt).TotalHours;
+                        if (remaining > 0)
+                        {
+                            return $"🕒 还需等待 {Math.Ceiling(remaining)} 小时";
+                        }
+                    }
+                    break;
+                }
+            }
+
+            return null;
+        }
+
+        private static string ResolveLevelDisplayName(string levelId)
+        {
+            var allContacts = Resources.FindObjectsOfTypeAll<ContactData>();
+            foreach (var contact in allContacts)
+            {
+                if (contact == null || contact.levels == null) continue;
+                foreach (var lvl in contact.levels)
+                {
+                    if (lvl != null && lvl.levelId == levelId)
+                    {
+                        if (!string.IsNullOrEmpty(lvl.displayName))
+                        {
+                            return $"{contact.displayName}·{lvl.displayName}";
+                        }
+                        return levelId;
+                    }
+                }
+            }
+            return levelId;
         }
 
         /// <summary>
