@@ -16,9 +16,10 @@ MonoBehaviour:
   displayName: "\u59D0\u59D0"
   avatar: {fileID: -1948291526935345619, guid: 6e4e7288edaa10c42a6baa1fbe7e7813, type: 3}
   levels:
-  - levelId: level_1
+  - levelId: Sister_meet
     displayName: "\u59D0\u59D0\u7684\u6E38\u620F"
     sceneName: Sister_meet
     lastMessage: "\u7F8E\u7F8E\uFF0C\u6211\u505A\u4E86\u4E2A\u6E38\u620F^-^"
     timestamp: 20:50
-    requiredGrade: 
+    unlockedFromStart: 1
+    unlockConditions: []

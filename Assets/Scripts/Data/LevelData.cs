@@ -43,11 +43,7 @@ namespace ChatGo.Data
         [Tooltip("游戏开始就解锁（用于游戏的起始关卡）")]
         public bool unlockedFromStart;
 
-        [Tooltip("所有条件都满足才解锁（AND 关系）。为空时退回到旧的「上一关 + requiredGrade」逻辑")]
+        [Tooltip("所有条件都满足才解锁（AND 关系）。为空且 unlockedFromStart=false 时视为未解锁")]
         public UnlockCondition[] unlockConditions;
-
-        [Header("旧版兼容（不推荐继续使用）")]
-        [Tooltip("旧版字段：上一关需达到的评级。仅当 unlockConditions 为空且 unlockedFromStart=false 时生效")]
-        public string requiredGrade;
     }
 }

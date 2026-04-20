@@ -1,0 +1,56 @@
+---
+description: Unity 项目禁止用 C# 代码自动创建/布局 UI，UI 由人工在场景与 Prefab 中搭建
+globs: Assets/**/*.cs
+alwaysApply: true
+---
+
+# UI 搭建：手动优先，禁止程序化生成
+
+本项目中所有 UGUI / TextMeshPro 的 UI 元素**必须**由开发者在 Unity 编辑器中手动搭建（场景 / Prefab）。脚本只负责数据绑定、事件响应、显隐切换，不得在运行时或编辑器代码里凭空创建/布局 UI。
+
+## ❌ 禁止的写法
+
+- `new GameObject(...)` 创建 UI 节点（含 `RectTransform`、`Image`、`RawImage`、`Button`、`TMP_Text`、`Canvas`、`ScrollRect`、`VerticalLayoutGroup`、`Mask` 等任何 UI 组件）。
+- 在代码里设置 `RectTransform.anchorMin/Max`、`pivot`、`offsetMin/Max`、`sizeDelta`、`anchoredPosition` 用于"布局"目的。
+- 在代码里设置颜色、字号、对齐、`ColorBlock`、`Sprite` 等"应该在 Inspector 里配的视觉参数"。
+- `BuildXxxUI()` / `CreateXxxPanel()` / `BuildXxxFromCode()` 之类的 fallback 方法——即使是兜底也不要写。
+- `AddComponent<Button>()` / `AddComponent<Image>()` 等用来补 UI 组件。
+
+```csharp
+// ❌ BAD
+var panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
+panel.transform.SetParent(parent, false);
+var rt = panel.GetComponent<RectTransform>();
+rt.anchorMin = Vector2.zero;
+rt.anchorMax = Vector2.one;
+panel.GetComponent<Image>().color = Color.white;
+```
+
+## ✅ 允许的写法
+
+- **`Instantiate(prefab, parent)`** —— 把**已搭好的 Prefab** 实例化到容器中。这是把"用户手搭的 UI"接入运行时的标准方式，**鼓励使用**。
+- 通过 `[SerializeField]` 字段在 Inspector 中拖引用：`Transform`、`GameObject`、`Button`、`TMP_Text`、`Image` 等。
+- 设置数据/状态：`text.text = ...`、`image.sprite = ...`、`button.onClick.AddListener(...)`、`go.SetActive(...)`、`transform.SetSiblingIndex(...)`。
+- 动画驱动的位移：补间结算面板、SlideIn/Out 等运行时动效（修改已有节点的 `anchoredPosition`）。
+- 必要时在 Awake/Start 里做 `Resources.FindObjectsOfTypeAll<T>()` 等数据收集。
+- **Editor 工具脚本**（`Assets/Editor/` 下、`[MenuItem]` / `EditorWindow` / `ScriptableWizard` 等）**允许**用代码批量生成或布局 Prefab、为场景节点批量挂组件、批量设置 RectTransform。这类是"开发期的辅助工具"，不算运行时建 UI。
+
+```csharp
+// ✅ GOOD
+[SerializeField] private Transform chatListContainer;
+[SerializeField] private GameObject chatRowPrefab;
+
+void Build()
+{
+    var row = Instantiate(chatRowPrefab, chatListContainer);
+    row.GetComponent<ChatRowUI>().Setup(contact);
+}
+```
+
+## AI 助手行为约定
+
+- 用户负责**搭 UI**（层级、RectTransform、组件、视觉参数），AI 负责**实例化与数据/事件绑定**。
+- 当被要求"做一个面板/弹窗/列表"时，先给出在编辑器里如何搭建的步骤（层级、组件、RectTransform 设置），并指出脚本应暴露哪些 `[SerializeField]` 字段；之后再写实例化/绑定的运行时脚本。
+- 不主动写 `BuildFullUI()` / `CreateScrollArea()` 之类的"运行时兜底建 UI"代码；遇到现有此类代码，建议删除并改为 Inspector 拖引用。
+- Editor 工具脚本（`Assets/Editor/` 下）写代码生成/布局 Prefab 是**允许**的，无需额外确认。
+- 仅当用户**明确要求**在运行时代码里 `new GameObject` 建 UI 时才照做，并先口头确认一次。

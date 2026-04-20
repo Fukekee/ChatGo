@@ -61,9 +61,8 @@
 | `sceneName` | string | Unity 场景名，需要加入 Build Settings |
 | `lastMessage` | string | ChatRow 上的预览消息文本 |
 | `timestamp` | string | ChatRow 上显示的时间字符串（仅展示） |
-| `unlockedFromStart` | bool | 是否游戏开始就解锁（起始关必勾） |
-| `unlockConditions` | UnlockCondition[] | 解锁条件数组，**多条件 AND** |
-| `requiredGrade` | string | **旧版字段**，留空即可（仅当 `unlockConditions` 为空时退化使用） |
+| `unlockedFromStart` | bool | 是否游戏开始就解锁（**全项目只能有 1 关勾选**，详见 `LevelSystemDesignNotes.md`） |
+| `unlockConditions` | UnlockCondition[] | 解锁条件数组，**多条件 AND**；为空且 `unlockedFromStart=false` 时永远锁住 |
 
 ### 2.2 UnlockCondition（解锁条件）
 
@@ -95,8 +94,8 @@
 |------|------|
 | `completed` | 是否已通关 |
 | `bestGrade` | 历史最佳评级 |
-| `unlockTimestamp` | 解锁时刻（毫秒） |
-| `completedTimestamp` | 首次通关时刻（毫秒，时间锁判定基础） |
+| `unlockTimestamp` | 解锁时刻（**Unix 秒**）。仅由 `MarkUnlocked` 写入；`unlockedFromStart` 关卡永远为 0 |
+| `completedTimestamp` | 首次通关时刻（**Unix 秒**），时间锁判定基础 |
 
 **持久化**：使用 `PlayerPrefs` + `JsonUtility`，键名 `LevelProgress_Data`。
 
@@ -128,18 +127,20 @@
 
 打开主菜单场景，选中挂 `LevelSelectUI` 的 GameObject，把所有 ContactData 拖到 `Contacts` 数组中。
 
-### Step 6（可选）：自定义 Prefab
+### Step 6：搭建 Prefab（必需）
 
-`LevelSelectUI` 期望两个 Prefab：
+`LevelSelectUI` 需要两个 Prefab，**必须在 Inspector 中拖入**（未配置时 `Start()` 会直接 LogError 退出）：
 
 - `Chat Row Prefab` → 挂 `ChatRowUI`
 - `Contact Detail UI` → 挂 `ContactDetailUI`
 
-未指定时会走代码兜底 `BuildXxxFromCode()`，但**强烈建议自己设计 Prefab**，外观可控且性能更好。
+> 项目规则：UI 元素由人工在场景 / Prefab 中手动搭建，脚本只负责 `Instantiate` 已有 Prefab 与数据/事件绑定。详见 `.cursor/rules/no-code-ui.mdc`。
 
 `ChatRowUI` 需要在 Prefab 上引用以下子物体（详见脚本 SerializeField）：
 - `avatarButton`、`avatarImage`、`contactNameText`、`messagePreviewText`、`timestampText`
-- `unreadBadge`（含子 `unreadCountText`）、`statusIcon`（已读/全 S 状态图标）
+- `badgeRoot`（含子 `badgeText`）、`statusIcon`（已读/全 S 状态图标）
+
+> 字体粗细 / 颜色等视觉风格由 Prefab 决定；脚本只赋 `text`，**不再**根据未读状态强制覆盖样式。未读状态完全靠 `badgeRoot` 红点徽章表达。
 
 ---
 
@@ -239,13 +240,15 @@ if (!hasAnyUnlocked) continue;
 
 ### 5.2 联系人排序
 
-`GetSortedContacts()` 按"该联系人最新解锁/通关的时间戳"降序排列：
+`GetSortedContacts()` 按"该联系人下所有关卡 `unlockTimestamp` 的最大值"**降序**排列：
 
 | 触发时机 | 排序结果 |
 |----------|----------|
-| 首次启动 | 全是 0 时间戳，按 Inspector 中 `contacts[]` 顺序 |
-| 通关任意关 | 该联系人 timestamp 更新，**冒到顶** |
-| 跨联系人解锁触发 | 新解锁的联系人 timestamp 更新，**冒到顶** |
+| 首次启动 | 唯一可见的起始联系人 ts=0，按 Inspector 中 `contacts[]` 顺序 |
+| 通关起始关 → 触发新联系人解锁 | 新联系人 unlockTimestamp = 通关时刻，**严格大于 0**，自动**冒到顶** |
+| 仅通关、未触发新关解锁 | 排序不变（`unlockTimestamp` 不被通关行为修改） |
+
+> ⚠️ `unlockedFromStart` 的关卡 `unlockTimestamp` **永远为 0**，因此该联系人在排序里**永远沉底**——这是有意为之，详见 `LevelSystemDesignNotes.md` 原则 2。
 
 ### 5.3 通关后的解锁瀑布
 
@@ -328,7 +331,7 @@ ChatGo.Data.LevelProgress.ClearAll();
 
 | 问题 | 原因 | 解决 |
 |------|------|------|
-| 主页空空什么都没有 | 没有任何关卡 `unlockedFromStart=true` | 至少给一个起始关勾选 |
+| 主页空空什么都没有 | 没有任何关卡 `unlockedFromStart=true` | **全项目恰好勾 1 个**起始关（多于 1 个会破坏排序约定） |
 | 通关后下一关没出现 | `Required Level Id` 拼错 / 没填 | 仔细对照 levelId |
 | 锁定原因显示原始 ID 而不是名字 | 该 ContactData 资源没被加载到内存 | 确保它已被 `LevelSelectUI.contacts` 引用 |
 | 时间锁永远不解锁 | 系统时间异常 / 没有 completedTimestamp | 检查 `LevelProgress.GetCompletedTimestamp(...)` |
@@ -343,8 +346,8 @@ ChatGo.Data.LevelProgress.ClearAll();
 
 ```csharp
 // —— 查询 ——
-bool   IsUnlocked(LevelData level)                     // 新版：基于 UnlockConditions
-bool   IsUnlocked(ContactData contact, int levelIndex) // 兼容版：优先新逻辑，否则按顺序判
+bool   IsUnlocked(LevelData level)                     // 基于 unlockedFromStart + UnlockConditions
+bool   IsUnlocked(ContactData contact, int levelIndex) // 仅做下标校验后转发到上面
 bool   IsCompleted(string levelId)
 string GetBestGrade(string levelId)
 long   GetUnlockTimestamp(string levelId)
@@ -356,8 +359,8 @@ int  GetCurrentLevelIndex(ContactData contact) // 当前可玩的最新关索引
 long GetContactLatestTimestamp(ContactData contact) // 用于排序
 
 // —— 写入 ——
-void MarkUnlocked(string levelId)
-void SaveResult(string levelId, string grade)  // 通关保存评级，自动写 completedTimestamp
+void MarkUnlocked(string levelId)              // 唯一会写 unlockTimestamp 的入口
+void SaveResult(string levelId, string grade)  // 通关保存评级，首次通关时写 completedTimestamp（不写 unlockTimestamp）
 void ClearAll()                                // 清空所有进度
 ```
 

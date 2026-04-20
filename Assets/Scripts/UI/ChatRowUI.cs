@@ -75,15 +75,11 @@ namespace ChatGo.UI
             if (contactNameText != null)
             {
                 contactNameText.text = contact.displayName;
-                contactNameText.fontStyle = unreadCount > 0 ? FontStyles.Bold : FontStyles.Normal;
             }
 
             if (messagePreviewText != null)
             {
                 messagePreviewText.text = currentLevel.lastMessage;
-                messagePreviewText.color = unreadCount > 0
-                    ? new Color(0.13f, 0.13f, 0.13f)
-                    : new Color(0.55f, 0.55f, 0.55f);
             }
 
             if (timestampText != null)

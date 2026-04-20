@@ -5,9 +5,10 @@ namespace ChatGo.Opponent
     /// <summary>
     /// 水平来回移动的 Opponent 方块。
     /// 被炮台子弹命中时通过 Hit() 扣全局 Opponent 血量。
-    /// 玩家从下方跳跃撞击同样可造成伤害。
+    /// 玩家从下方跳跃撞击同样可造成伤害；横向无法穿过（实体碰撞体 + Kinematic Rigidbody2D）。
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public class OpponentBlock : MonoBehaviour
     {
         [Header("移动")]
@@ -23,21 +24,30 @@ namespace ChatGo.Opponent
         [SerializeField] private int playerHitDamage = 10;
         [Tooltip("同一次跳跃中不会重复计算伤害的冷却时间（秒）")]
         [SerializeField] private float hitCooldown = 0.5f;
+        [Tooltip("接触法线 y 分量大于该阈值时，视为玩家从下方顶到方块。范围 0~1，0.5 是经验值。")]
+        [SerializeField] private float bottomHitNormalThreshold = 0.5f;
 
         private Vector3 originPosition;
         private float direction = 1f;
         private float activeTimer;
         private float lastPlayerHitTime = float.NegativeInfinity;
+        private Rigidbody2D rb;
 
         private void Awake()
         {
             originPosition = transform.position;
             activeTimer = activeTime;
 
+            rb = GetComponent<Rigidbody2D>();
+            // 让方块成为可移动的实体碰撞体：
+            // - Kinematic：不受重力 / 力影响，由我们用 MovePosition 驱动；
+            // - 非 trigger：玩家无法横穿。
+            rb.bodyType = RigidbodyType2D.Kinematic;
+
             Collider2D col = GetComponent<Collider2D>();
-            if (!col.isTrigger)
+            if (col.isTrigger)
             {
-                col.isTrigger = true;
+                col.isTrigger = false;
             }
         }
 
@@ -69,9 +79,20 @@ namespace ChatGo.Opponent
             OpponentHealth.Instance?.TakeDamage(damage);
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
+        private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (!other.CompareTag("Player"))
+            TryHandlePlayerHit(collision);
+        }
+
+        private void OnCollisionStay2D(Collision2D collision)
+        {
+            // 玩家可能贴着方块持续向上撞，Stay 期间也尝试结算（受 hitCooldown 约束，不会刷伤害）。
+            TryHandlePlayerHit(collision);
+        }
+
+        private void TryHandlePlayerHit(Collision2D collision)
+        {
+            if (!collision.collider.CompareTag("Player"))
             {
                 return;
             }
@@ -81,19 +102,16 @@ namespace ChatGo.Opponent
                 return;
             }
 
-            Rigidbody2D playerRb = other.attachedRigidbody;
-            if (playerRb == null)
+            // 接触法线指向「从对方表面指向自己」，玩家从下方顶上来时法线大致是 (0, 1)。
+            int contactCount = collision.contactCount;
+            for (int i = 0; i < contactCount; i++)
             {
-                return;
-            }
-
-            bool isBelow = other.transform.position.y < transform.position.y;
-            bool isMovingUp = playerRb.linearVelocity.y > 0.1f;
-
-            if (isBelow && isMovingUp)
-            {
-                lastPlayerHitTime = Time.time;
-                Hit(playerHitDamage);
+                if (collision.GetContact(i).normal.y > bottomHitNormalThreshold)
+                {
+                    lastPlayerHitTime = Time.time;
+                    Hit(playerHitDamage);
+                    return;
+                }
             }
         }
 
@@ -103,17 +121,27 @@ namespace ChatGo.Opponent
             float leftBound = originPosition.x - safeRange;
             float rightBound = originPosition.x + safeRange;
 
-            transform.position += Vector3.right * (direction * moveSpeed * Time.deltaTime);
+            Vector3 current = transform.position;
+            Vector3 target = current + Vector3.right * (direction * moveSpeed * Time.deltaTime);
 
-            if (transform.position.x >= rightBound)
+            if (target.x >= rightBound)
             {
-                transform.position = new Vector3(rightBound, transform.position.y, transform.position.z);
+                target.x = rightBound;
                 direction = -1f;
             }
-            else if (transform.position.x <= leftBound)
+            else if (target.x <= leftBound)
             {
-                transform.position = new Vector3(leftBound, transform.position.y, transform.position.z);
+                target.x = leftBound;
                 direction = 1f;
+            }
+
+            if (rb != null)
+            {
+                rb.MovePosition(target);
+            }
+            else
+            {
+                transform.position = target;
             }
         }
 

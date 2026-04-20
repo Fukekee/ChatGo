@@ -116,16 +116,9 @@ namespace ChatGo.Data
                 record.bestGrade = grade;
             }
 
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-            if (record.unlockTimestamp == 0)
-            {
-                record.unlockTimestamp = now;
-            }
-
             if (firstCompletion && record.completedTimestamp == 0)
             {
-                record.completedTimestamp = now;
+                record.completedTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             }
 
             Save();
@@ -211,32 +204,13 @@ namespace ChatGo.Data
         }
 
         /// <summary>
-        /// Backward compatible overload — uses contact + index, falls back to legacy
-        /// "previous level + requiredGrade" rule if the level has no new conditions.
+        /// 按联系人数组下标取关卡，解锁规则与 <see cref="IsUnlocked(LevelData)"/> 一致。
         /// </summary>
         public static bool IsUnlocked(ContactData contact, int levelIndex)
         {
             if (contact == null || contact.levels == null) return false;
             if (levelIndex < 0 || levelIndex >= contact.levels.Length) return false;
-
-            var level = contact.levels[levelIndex];
-
-            if (level.unlockedFromStart) return true;
-
-            if (level.unlockConditions != null && level.unlockConditions.Length > 0)
-            {
-                return IsUnlocked(level);
-            }
-
-            // Legacy fallback: first level free, otherwise previous + requiredGrade.
-            if (levelIndex == 0) return true;
-            var prevLevel = contact.levels[levelIndex - 1];
-
-            if (!IsCompleted(prevLevel.levelId)) return false;
-            if (string.IsNullOrEmpty(level.requiredGrade)) return true;
-
-            string bestGrade = GetBestGrade(prevLevel.levelId);
-            return !string.IsNullOrEmpty(bestGrade) && CompareGrade(bestGrade, level.requiredGrade) >= 0;
+            return IsUnlocked(contact.levels[levelIndex]);
         }
 
         /// <summary>
@@ -257,11 +231,7 @@ namespace ChatGo.Data
                 return null;
             }
 
-            if (string.IsNullOrEmpty(level.requiredGrade))
-            {
-                return "🔒 未解锁";
-            }
-            return $"🔒 需要上一关达到 {level.requiredGrade}";
+            return "🔒 未解锁";
         }
 
         private static string GetConditionLockReason(UnlockCondition cond)

@@ -16,9 +16,14 @@ MonoBehaviour:
   displayName: "\u8001\u677F"
   avatar: {fileID: 7970721710989662620, guid: 6507b2156308f584aaf3cfe9e6d60dcd, type: 3}
   levels:
-  - levelId: level_2
+  - levelId: QingJia
     displayName: "\u8BF7\u5047"
     sceneName: QingJia
     lastMessage: "\u8981\u8BF7\u5047\uFF1F"
     timestamp: 11:12
-    requiredGrade: A
+    unlockedFromStart: 0
+    unlockConditions:
+    - requiredLevelId: Sister_meet
+      minimumGrade: A
+      trigger: 0
+      delayHours: 0

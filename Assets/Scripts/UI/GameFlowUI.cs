@@ -188,7 +188,20 @@ namespace ChatGo.UI
 
         private void TryUnlockNextLevel()
         {
-            var allContacts = Resources.FindObjectsOfTypeAll<ContactData>();
+            ContactData[] allContacts = null;
+
+            var registry = ContactRegistry.Get();
+            if (registry != null && registry.allContacts != null && registry.allContacts.Length > 0)
+            {
+                allContacts = registry.allContacts;
+            }
+            else
+            {
+                // 兜底：在主菜单场景里 ContactData 通常被 LevelSelectUI 引用，能扫到；
+                // 在战斗场景里基本扫不到，所以更建议配好 ContactRegistry。
+                allContacts = Resources.FindObjectsOfTypeAll<ContactData>();
+                Debug.LogWarning($"GameFlowUI: 未找到 ContactRegistry，回退到 FindObjectsOfTypeAll，扫到 {allContacts.Length} 个 ContactData");
+            }
 
             foreach (var contact in allContacts)
             {
@@ -197,6 +210,10 @@ namespace ChatGo.UI
                 foreach (var level in contact.levels)
                 {
                     if (level == null || string.IsNullOrEmpty(level.levelId)) continue;
+                    // 起始关从一开始就解锁，不应被打 unlockTimestamp，
+                    // 否则会和"刚被解锁的下一关"撞在同一 Unix 秒，
+                    // 导致 GetContactLatestTimestamp 排序 tie，起始联系人反而置顶。
+                    if (level.unlockedFromStart) continue;
                     if (LevelProgress.GetUnlockTimestamp(level.levelId) > 0) continue;
 
                     if (LevelProgress.IsUnlocked(level))

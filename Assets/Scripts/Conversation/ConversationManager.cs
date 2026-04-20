@@ -31,11 +31,11 @@ namespace ChatGo.Conversation
 
         [Header("平台模式")]
         [SerializeField] private ConversationPlatformMode platformMode = ConversationPlatformMode.RuntimeBubblePool;
-        [Tooltip("HandPlaced 模式下用于复用显示的 Bubble 平台。建议至少 3 个，按上/中/下顺序放入。")]
+        [Tooltip("HandPlaced 模式下复用显示的 Bubble 平台对象池。运行时位置由槽位决定，所以这些物体在场景里摆在哪都行。")]
         [SerializeField] private BubblePlatform[] handPlacedPlatforms;
         [Tooltip("HandPlaced 模式最多同时显示几条消息。")]
         [SerializeField] private int handPlacedMaxVisible = 3;
-        [Tooltip("可选：手动指定上/中/下槽位。为空时使用 handPlacedPlatforms 前 N 个初始位置。")]
+        [Tooltip("可选：手动指定 N 个槽位 Transform。为空时使用 firstBubblePosition + verticalSpacing 自动生成等距单列槽位。")]
         [SerializeField] private Transform[] handPlacedSlots;
         [Tooltip("HandPlaced 模式每次更新时的平台上移动画时长。0 表示瞬移。")]
         [SerializeField] private float handPlacedSlideDuration = 0.2f;
@@ -46,9 +46,12 @@ namespace ChatGo.Conversation
         [Tooltip("触发 ReadReceipt 后，延迟多久再生成下一个平台并传送玩家（秒）。期间玩家无法移动。")]
         [SerializeField] private float nextLineDelay = 0.7f;
 
-        [Header("生成参数（仅 RuntimeBubblePool）")]
+        [Header("默认锚点 / 行间距")]
+        [Tooltip("RuntimeBubblePool 的基准位置；HandPlaced 模式下若 handPlacedSlots 为空，也作为 fallback 槽位的列锚点。")]
         [SerializeField] private Vector3 firstBubblePosition = Vector3.zero;
+        [Tooltip("相邻槽位 / 气泡的 Y 间距。负值表示往下排列。")]
         [SerializeField] private float verticalSpacing = -3f;
+        [Header("生成参数（仅 RuntimeBubblePool）")]
         [Tooltip("对方气泡相对 firstBubblePosition 的 X 偏移（左侧为负）")]
         [SerializeField] private float opponentBubbleX = -4f;
         [Tooltip("我方气泡相对 firstBubblePosition 的 X 偏移（右侧为正）")]
@@ -453,14 +456,13 @@ namespace ChatGo.Conversation
                 }
                 else
                 {
-                    BubblePlatform slotBubble = handPlacedPlatforms[i];
-                    if (slotBubble == null)
-                    {
-                        Debug.LogError($"ConversationManager: handPlacedPlatforms[{i}] 为空。");
-                        continue;
-                    }
-
-                    handPlacedSlotPositions.Add(slotBubble.transform.position);
+                    // Fallback：用 firstBubblePosition 作列锚点 + verticalSpacing 等距叠出 N 个槽位。
+                    // 不再读 handPlacedPlatforms[i] 的初始位置，避免它们的 X / Y 被无意中固化进槽位。
+                    Vector3 fallback = new Vector3(
+                        firstBubblePosition.x,
+                        firstBubblePosition.y + verticalSpacing * i,
+                        firstBubblePosition.z);
+                    handPlacedSlotPositions.Add(fallback);
                 }
             }
 
