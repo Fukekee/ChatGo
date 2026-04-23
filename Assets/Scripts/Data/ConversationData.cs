@@ -15,6 +15,12 @@ namespace ChatGo.Data
         public string choiceText;
         [Tooltip("选了这个选项后跳转到哪个节点 ID")]
         public string targetNodeId;
+
+        [Header("机关（对应玩家气泡 BubblePlatform.hazardGroups 下标）")]
+        [Tooltip("勾选后，根据 hazardGroupIndex 启用预制体上 hazardGroups 中的一项")]
+        public bool useHazardGroup;
+        [Tooltip("hazardGroups 数组下标，从 0 开始")]
+        public int hazardGroupIndex;
     }
 
     [Serializable]

@@ -382,6 +382,7 @@ namespace ChatGo.Conversation
             if (bubble != null)
             {
                 bubble.SetReplyText(choice.choiceText);
+                bubble.ApplyHazardFromChoice(choice);
                 SubscribeReadReceiptForBubble(bubble);
             }
 

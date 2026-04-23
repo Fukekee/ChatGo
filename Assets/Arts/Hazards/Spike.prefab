@@ -29,8 +29,8 @@ Transform:
   m_GameObject: {fileID: 3707166973121698834}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.378, y: -1.053, z: 0}
-  m_LocalScale: {x: 0.07451649, y: 0.071114585, z: 1}
+  m_LocalPosition: {x: -6.351, y: -1.0276, z: 0}
+  m_LocalScale: {x: 0.35078773, y: 0.33432388, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6877125270075306542}
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -5620055989646091708, guid: 91a9d6b5ddf59314fbb157db9585ce7b, type: 3}
+  m_Sprite: {fileID: -817534099351428093, guid: 23d5d4f8beaa2e340880839e300a0395, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -172,10 +172,11 @@ EdgeCollider2D:
   m_Offset: {x: 0, y: 0}
   m_EdgeRadius: 0
   m_Points:
-  - {x: -3.2067785, y: -2.9887922}
-  - {x: -0.3869906, y: 3.0078423}
-  - {x: 1.7440896, y: 0.67290974}
-  - {x: 3.3913474, y: -3.1118593}
+  - {x: -0.6217041, y: -0.65346694}
+  - {x: -0.6004394, y: -0.049217775}
+  - {x: -0.052113533, y: 0.66028637}
+  - {x: 0.5241196, y: 0.032239895}
+  - {x: 0.58336055, y: -0.61146367}
   m_AdjacentStartPoint: {x: 0, y: 0}
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0
@@ -249,10 +250,11 @@ EdgeCollider2D:
   m_Offset: {x: 0, y: 0}
   m_EdgeRadius: 0
   m_Points:
-  - {x: -3.241463, y: -2.8905597}
-  - {x: -0.46914202, y: 3.0559244}
-  - {x: 2.1995826, y: -0.16646683}
-  - {x: 3.2543316, y: -2.9695964}
+  - {x: -0.6146039, y: -0.6358197}
+  - {x: -0.61657333, y: -0.13733199}
+  - {x: -0.060486138, y: 0.6507652}
+  - {x: 0.5812851, y: -0.04884647}
+  - {x: 0.6183778, y: -0.62260544}
   m_AdjacentStartPoint: {x: 0, y: 0}
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0

@@ -17,6 +17,10 @@ namespace ChatGo.Bubble
         [SerializeField] private GameObject typingIndicator;
         [SerializeField] private ReadReceiptTrigger readReceiptTrigger;
 
+        [Header("机关（玩家选项）")]
+        [Tooltip("按顺序拖入各套机关根物体；Prefab 里默认全部关闭。选项通过 DialogueChoice.hazardGroupIndex 指定启用哪一项")]
+        [SerializeField] private GameObject[] hazardGroups;
+
         public bool AvatarOnLeft => avatarOnLeft;
         public ReadReceiptTrigger ReadReceiptTrigger => readReceiptTrigger;
         public DialogueNode CurrentNode { get; private set; }
@@ -64,6 +68,47 @@ namespace ChatGo.Bubble
             {
                 readReceiptTrigger.BindPlatform(this);
                 readReceiptTrigger.ResetTriggerState();
+            }
+
+            ResetHazardGroups();
+        }
+
+        /// <summary>关闭 hazardGroups 中所有项（换行或选关机关时调用）。</summary>
+        public void ResetHazardGroups()
+        {
+            if (hazardGroups == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < hazardGroups.Length; i++)
+            {
+                if (hazardGroups[i] != null)
+                {
+                    hazardGroups[i].SetActive(false);
+                }
+            }
+        }
+
+        /// <summary>根据选项启用 hazardGroups[hazardGroupIndex]，其余关闭。</summary>
+        public void ApplyHazardFromChoice(DialogueChoice choice)
+        {
+            if (choice == null || !choice.useHazardGroup)
+            {
+                ResetHazardGroups();
+                return;
+            }
+
+            ResetHazardGroups();
+            int index = choice.hazardGroupIndex;
+            if (hazardGroups == null || index < 0 || index >= hazardGroups.Length)
+            {
+                return;
+            }
+
+            if (hazardGroups[index] != null)
+            {
+                hazardGroups[index].SetActive(true);
             }
         }
 

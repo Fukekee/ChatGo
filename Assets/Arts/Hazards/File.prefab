@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6980293786362012165}
   - component: {fileID: 4396430459459459490}
-  - component: {fileID: 3522296667852768123}
   - component: {fileID: 8601296640733618745}
+  - component: {fileID: 8626645214681726476}
   m_Layer: 0
   m_Name: File
   m_TagString: Untagged
@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 3865347449064457323}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -7.4143, y: -0.1465, z: 0}
-  m_LocalScale: {x: 0.5019746, y: 0.16488953, z: 1}
+  m_LocalPosition: {x: -7.4332, y: -0.1775, z: 0}
+  m_LocalScale: {x: 0.58216923, y: 0.67658013, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -83,8 +83,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.7509433, g: 0, b: 0, a: 1}
+  m_Sprite: {fileID: -6361891394081686804, guid: 4ae79c1edae3acd45833079345338f71, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -93,8 +93,25 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!61 &3522296667852768123
-BoxCollider2D:
+--- !u!114 &8601296640733618745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3865347449064457323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6c033c43cc130744a174a57e6e26c84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Hazards.FileRainDrop
+  fallSpeed: 4
+  damage: 10
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 64
+--- !u!60 &8626645214681726476
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -131,28 +148,25 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 0.42, y: 0.34}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &8601296640733618745
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3865347449064457323}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6c033c43cc130744a174a57e6e26c84, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Hazards.FileRainDrop
-  fallSpeed: 4
-  damage: 10
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 64
+  m_Points:
+    m_Paths:
+    - - {x: 0.13, y: 0.11}
+      - {x: 0.07, y: 0.17}
+      - {x: -0.07, y: 0.17}
+      - {x: -0.13, y: 0.11}
+      - {x: -0.14999999, y: 0.07}
+      - {x: -0.19999999, y: 0.06}
+      - {x: -0.21, y: 0.049999997}
+      - {x: -0.21, y: -0.01}
+      - {x: -0.049999997, y: -0.17}
+      - {x: 0.049999997, y: -0.17}
+      - {x: 0.06, y: -0.16}
+      - {x: 0.21, y: -0.03}
+      - {x: 0.21, y: 0.06}
+  m_UseDelaunayMesh: 1
