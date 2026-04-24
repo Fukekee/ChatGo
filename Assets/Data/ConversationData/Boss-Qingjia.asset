@@ -25,20 +25,28 @@ MonoBehaviour:
     nextNodeId: 3
     choices: []
   - nodeId: 3
-    text: "\u6211\u5728"
+    text: 
     speaker: 1
-    nextNodeId: 4
-    choices: []
+    nextNodeId: 
+    choices:
+    - choiceText: "\u6211\u5728"
+      targetNodeId: 4
+      useHazardGroup: 0
+      hazardGroupIndex: 0
   - nodeId: 4
     text: "\u8BF4\u5427\uFF0C\u4E3A\u4EC0\u4E48\u8981\u8BF7\u5047"
     speaker: 0
     nextNodeId: 5
     choices: []
   - nodeId: 5
-    text: "\u6211\u8981\u51C6\u5907\u6211\u7684\u6E38\u620F\u4E0A\u7EBF\u4E86"
+    text: 
     speaker: 1
-    nextNodeId: 6
-    choices: []
+    nextNodeId: 
+    choices:
+    - choiceText: "\u6211\u8981\u51C6\u5907\u6211\u7684\u6E38\u620F\u4E0A\u7EBF\u4E86"
+      targetNodeId: 6
+      useHazardGroup: 0
+      hazardGroupIndex: 0
   - nodeId: 6
     text: "\u4F60\u5C45\u7136\u8FD8\u81EA\u5DF1\u505A\u4E86\u6E38\u620F\uFF1F"
     speaker: 0
@@ -61,5 +69,9 @@ MonoBehaviour:
     choices:
     - choiceText: .......
       targetNodeId: 
-    - choiceText: 
+      useHazardGroup: 1
+      hazardGroupIndex: 0
+    - choiceText: "\u5C31\u7B97\u4E0D\u600E\u4E48\u6837\u6211\u4E5F\u662F\u8981\u8BF7\u5047\u7684"
       targetNodeId: 
+      useHazardGroup: 1
+      hazardGroupIndex: 1

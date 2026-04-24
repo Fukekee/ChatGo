@@ -51,7 +51,7 @@ MonoBehaviour:
   fireDirection: {x: -1, y: 0}
   fireInterval: 1.2
   bulletSpeed: 8
-  bulletDamage: 10
+  bulletDamage: 5
   fireImmediatelyOnActivate: 1
 --- !u!1 &2057536267335908839
 GameObject:

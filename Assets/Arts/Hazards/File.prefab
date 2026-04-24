@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Hazards.FileRainDrop
   fallSpeed: 4
-  damage: 10
+  damage: 5
   groundMask:
     serializedVersion: 2
     m_Bits: 64

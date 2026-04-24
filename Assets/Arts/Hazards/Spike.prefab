@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3713215920366066642}
   - component: {fileID: 7460167867509702129}
   - component: {fileID: 1095987391860017950}
+  - component: {fileID: -3843497551133320420}
   m_Layer: 0
   m_Name: Spike
   m_TagString: Untagged
@@ -107,7 +108,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fcfc9424649c3348af28e335c4ae9bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Hazards.SpikeHazard
-  damage: 10
+  damage: 5
 --- !u!50 &7460167867509702129
 Rigidbody2D:
   serializedVersion: 5
@@ -181,6 +182,22 @@ EdgeCollider2D:
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0
   m_UseAdjacentEndPoint: 0
+--- !u!111 &-3843497551133320420
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3707166973121698834}
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Animation: {fileID: 0}
+  m_Animations: []
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_UpdateMode: 0
+  m_CullingType: 0
 --- !u!1 &6699844358414558626
 GameObject:
   m_ObjectHideFlags: 0

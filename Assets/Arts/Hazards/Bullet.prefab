@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatGo.Hazards.TurretBullet
   speed: 8
-  damage: 10
+  damage: 5
   lifeTime: 4
   blockLayers:
     serializedVersion: 2
